@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tip Calculator</title>
+
+  <!-- =============================================
+    FONTS
+    We import two fonts from Google Fonts:
+    - "DM Serif Display" for the big result numbers (elegant, distinctive)
+    - "DM Sans" for all other text (clean and readable)
+  ============================================= -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
+
+  <style>
+    /* =============================================
+      CSS VARIABLES (the "settings" of our design)
+      We define colors once here, then reuse them
+      everywhere. Changing one value updates the
+      whole page — that's the power of variables.
+      We have two sets: one for light mode, one
+      for dark mode (auto-detected from the OS).
+    ============================================= */
+    :root {
+      --bg:          #F5F3EE;
+      --card-bg:     #FFFFFF;
+      --text:        #1A1916;
+      --text-muted:  #888580;
+      --border:      #E4E1D9;
+      --accent:      #2D6A4F;
+      --accent-text: #FFFFFF;
+      --accent-soft: #EAF3DE;
+      --result:      #2D6A4F;
+      --btn-bg:      #F0EDE6;
+      --btn-hover:   #E4E1D9;
+      --shadow:      0 2px 24px rgba(0,0,0,0.07);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg:          #141412;
+        --card-bg:     #1E1D1A;
+        --text:        #F0EDE6;
+        --text-muted:  #7A7770;
+        --border:      #2E2D29;
+        --accent:      #52B788;
+        --accent-text: #0D2B1F;
+        --accent-soft: #17332A;
+        --result:      #52B788;
+        --btn-bg:      #2A2925;
+        --btn-hover:   #333128;
+        --shadow:      0 2px 24px rgba(0,0,0,0.3);
+      }
+    }
+
+    /* =============================================
+      RESET & BASE STYLES
+      We clear browser defaults (margins, padding,
+      box-sizing) so our layout behaves predictably
+      across all browsers.
+    ============================================= */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+    }
+
+    /* =============================================
+      CARD
+      The centered white container that holds
+      everything. max-width keeps it from getting
+      too wide on desktop; width: 100% makes it
+      fill the screen on mobile.
+    ============================================= */
+    .card {
+      background: var(--card-bg);
+      border-radius: 20px;
+      padding: 32px 28px 28px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+    }
+
+    .card-title {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+    }
+
+    /* =============================================
+      FORM SECTIONS
+      Each "section" is a labeled group: a label
+      on top, then the input or buttons below.
+      margin-bottom spaces them vertically.
+    ============================================= */
+    .section {
+      margin-bottom: 22px;
+    }
+
+    .section-label {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    /* =============================================
+      BILL INPUT
+      The main text input for the bill amount.
+      We use a wrapper div to position the "$"
+      symbol inside the input visually.
+    ============================================= */
+    .input-wrap {
+      position: relative;
+    }
+
+    .input-prefix {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 16px;
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    .bill-input {
+      width: 100%;
+      background: var(--btn-bg);
+      border: 1.5px solid transparent;
+      border-radius: 12px;
+      padding: 12px 14px 12px 30px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 18px;
+      font-weight: 500;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.15s;
+      -moz-appearance: textfield;
+    }
+
+    .bill-input::-webkit-outer-spin-button,
+    .bill-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+    .bill-input:focus {
+      border-color: var(--accent);
+    }
+
+    /* =============================================
+      TIP BUTTONS
+      A row of buttons for quick tip selection.
+      We use CSS Grid so they space out evenly.
+      The "active" class is added by JavaScript
+      when a button is clicked.
+    ============================================= */
+    .tip-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+    }
+
+    .tip-btn {
+      background: var(--btn-bg);
+      border: 1.5px solid transparent;
+      border-radius: 10px;
+      padding: 10px 4px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: background 0.12s, color 0.12s, border-color 0.12s, transform 0.1s;
+    }
+
+    .tip-btn:hover {
+      background: var(--btn-hover);
+      color: var(--text);
+    }
+
+    .tip-btn.active {
+      background: var(--accent);
+      color: var(--accent-text);
+      border-color: var(--accent);
+    }
+
+    .tip-btn:active {
+      transform: scale(0.95);
+    }
+
+    /* =============================================
+      PEOPLE COUNTER
+      A +/- stepper for splitting the bill.
+      We use flexbox to lay out the minus button,
+      the number, and the plus button in a row.
+    ============================================= */
+    .stepper {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      background: var(--btn-bg);
+      border-radius: 12px;
+      overflow: hidden;
+      width: fit-content;
+    }
+
+    .step-btn {
+      background: transparent;
+      border: none;
+      width: 46px;
+      height: 46px;
+      font-size: 20px;
+      font-weight: 400;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: background 0.12s, color 0.12s;
+      line-height: 1;
+    }
+
+    .step-btn:hover {
+      background: var(--btn-hover);
+      color: var(--text);
+    }
+
+    .step-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    .step-count {
+      font-size: 17px;
+      font-weight: 600;
+      min-width: 38px;
+      text-align: center;
+      color: var(--text);
+    }
+
+    /* =============================================
+      DIVIDER
+      A thin horizontal line to separate the inputs
+      from the results section below.
+    ============================================= */
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 24px 0;
+    }
+
+    /* =============================================
+      RESULTS
+      The two big numbers at the bottom.
+      We use "DM Serif Display" here — a more
+      elegant font — to make the results feel
+      special and easy to scan at a glance.
+    ============================================= */
+    .results {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .result-box {
+      background: var(--accent-soft);
+      border-radius: 14px;
+      padding: 16px;
+      text-align: center;
+    }
+
+    .result-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--result);
+      opacity: 0.75;
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    .result-value {
+      font-family: 'DM Serif Display', serif;
+      font-size: 32px;
+      color: var(--result);
+      line-height: 1;
+      display: block;
+      transition: transform 0.12s;
+    }
+
+    .result-value.bump {
+      transform: scale(1.06);
+    }
+
+    /* =============================================
+      RESET BUTTON
+      A small link-style button to clear the form.
+    ============================================= */
+    .reset-btn {
+      display: block;
+      margin: 18px auto 0;
+      background: none;
+      border: none;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      color: var(--text-muted);
+      cursor: pointer;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      transition: color 0.12s;
+    }
+
+    .reset-btn:hover {
+      color: var(--text);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- =============================================
+    HTML STRUCTURE
+    This is the visible skeleton of our app.
+    Every element here corresponds to something
+    the user sees or interacts with.
+  ============================================= -->
+  <div class="card">
+    <p class="card-title">Tip Calculator</p>
+
+    <!-- Bill Amount -->
+    <div class="section">
+      <label class="section-label" for="bill">Bill Amount</label>
+      <div class="input-wrap">
+        <span class="input-prefix">$</span>
+        <input
+          class="bill-input"
+          type="number"
+          id="bill"
+          placeholder="0.00"
+          min="0"
+          step="0.01"
+        />
+      </div>
+    </div>
+
+    <!-- Tip Percentage -->
+    <div class="section">
+      <span class="section-label">Tip %</span>
+      <div class="tip-grid">
+        <button class="tip-btn" data-tip="10">10%</button>
+        <button class="tip-btn active" data-tip="15">15%</button>
+        <button class="tip-btn" data-tip="18">18%</button>
+        <button class="tip-btn" data-tip="20">20%</button>
+        <button class="tip-btn" data-tip="25">25%</button>
+      </div>
+    </div>
+
+    <!-- Number of People -->
+    <div class="section">
+      <span class="section-label">Split Between</span>
+      <div class="stepper">
+        <button class="step-btn" id="minus" aria-label="Remove person">−</button>
+        <span class="step-count" id="people-count">1</span>
+        <button class="step-btn" id="plus" aria-label="Add person">+</button>
+      </div>
+    </div>
+
+    <hr class="divider" />
+
+    <!-- Results -->
+    <div class="results">
+      <div class="result-box">
+        <span class="result-label">Tip / Person</span>
+        <span class="result-value" id="tip-per-person">$0.00</span>
+      </div>
+      <div class="result-box">
+        <span class="result-label">Total / Person</span>
+        <span class="result-value" id="total-per-person">$0.00</span>
+      </div>
+    </div>
+
+    <button class="reset-btn" id="reset">Reset</button>
+  </div>
+
+  <script>
+    /* =============================================
+      JAVASCRIPT — STATE
+      "State" just means: the current values our
+      app is working with. We store them in these
+      three variables. When any of them change,
+      we recalculate and update the display.
+    ============================================= */
+    let bill   = 0;      // the bill amount in dollars
+    let tipPct = 15;     // selected tip percentage (default: 15%)
+    let people = 1;      // number of people splitting
+
+    /* =============================================
+      GRABBING ELEMENTS
+      We grab references to the HTML elements we
+      need to read from or write to. It's faster
+      to store them in variables than to search
+      for them every time.
+    ============================================= */
+    const billInput      = document.getElementById('bill');
+    const tipButtons     = document.querySelectorAll('.tip-btn');
+    const minusBtn       = document.getElementById('minus');
+    const plusBtn        = document.getElementById('plus');
+    const peopleDisplay  = document.getElementById('people-count');
+    const tipResult      = document.getElementById('tip-per-person');
+    const totalResult    = document.getElementById('total-per-person');
+    const resetBtn       = document.getElementById('reset');
+
+    /* =============================================
+      CALCULATE & UPDATE
+      This function runs every time something changes.
+      It does the math and writes the results into
+      the page. Keeping all logic in one function
+      makes it easy to trigger from anywhere.
+    ============================================= */
+    function calculate() {
+      const tipAmount   = bill * (tipPct / 100);
+      const totalAmount = bill + tipAmount;
+
+      const tipPerPerson   = people > 0 ? tipAmount   / people : 0;
+      const totalPerPerson = people > 0 ? totalAmount / people : 0;
+
+      // Format as currency and write to the page
+      tipResult.textContent   = '$' + tipPerPerson.toFixed(2);
+      totalResult.textContent = '$' + totalPerPerson.toFixed(2);
+
+      // Small "bump" animation to draw the eye to the change
+      [tipResult, totalResult].forEach(el => {
+        el.classList.remove('bump');
+        void el.offsetWidth; // force browser to register the removal
+        el.classList.add('bump');
+        setTimeout(() => el.classList.remove('bump'), 120);
+      });
+
+      // Disable minus if already at 1 person
+      minusBtn.disabled = people <= 1;
+    }
+
+    /* =============================================
+      EVENT LISTENERS — BILL INPUT
+      "addEventListener" means: "watch this element,
+      and when the event happens, run this function."
+      'input' fires every time the value changes —
+      so results update as you type, not just on blur.
+    ============================================= */
+    billInput.addEventListener('input', () => {
+      bill = parseFloat(billInput.value) || 0;
+      calculate();
+    });
+
+    /* =============================================
+      EVENT LISTENERS — TIP BUTTONS
+      We loop through all tip buttons. When one is
+      clicked, we remove 'active' from all of them,
+      then add it only to the one that was clicked.
+      data-tip stores the number (e.g. "15") as an
+      attribute we can read with dataset.tip.
+    ============================================= */
+    tipButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        tipButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        tipPct = parseInt(btn.dataset.tip);
+        calculate();
+      });
+    });
+
+    /* =============================================
+      EVENT LISTENERS — PEOPLE STEPPER
+      Each button adjusts the 'people' variable up
+      or down, then updates the display and recalculates.
+    ============================================= */
+    plusBtn.addEventListener('click', () => {
+      people++;
+      peopleDisplay.textContent = people;
+      calculate();
+    });
+
+    minusBtn.addEventListener('click', () => {
+      if (people > 1) {
+        people--;
+        peopleDisplay.textContent = people;
+        calculate();
+      }
+    });
+
+    /* =============================================
+      RESET
+      Clears everything back to defaults. We reset
+      our state variables, clear the input field,
+      restore the default tip button, and recalculate.
+    ============================================= */
+    resetBtn.addEventListener('click', () => {
+      bill   = 0;
+      tipPct = 15;
+      people = 1;
+
+      billInput.value          = '';
+      peopleDisplay.textContent = '1';
+
+      tipButtons.forEach(b => b.classList.remove('active'));
+      document.querySelector('[data-tip="15"]').classList.add('active');
+
+      calculate();
+    });
+
+    // Run once on load so the display starts at $0.00
+    calculate();
+  </script>
+
+</body>
+</html>
