@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Pomodoro Timer</title>
+
+  <!-- =============================================
+    FONTS
+    "Syne" for the timer digits — geometric and bold.
+    "DM Sans" for all other text — clean and readable.
+  ============================================= -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- =============================================
+    APP WRAPPER
+    A single centered card that holds everything.
+    The data-mode attribute is set by JS and drives
+    the accent color changes via CSS attribute selectors.
+  ============================================= -->
+  <div class="card" id="app" data-mode="focus">
+
+    <!-- ── HEADER ─────────────────────────────── -->
+    <header class="header">
+      <div class="mode-tabs">
+        <button class="mode-tab active" data-target="focus">Focus</button>
+        <button class="mode-tab" data-target="short">Short Break</button>
+        <button class="mode-tab" data-target="long">Long Break</button>
+      </div>
+      <button class="settings-toggle" id="settings-toggle" aria-label="Settings">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <circle cx="9" cy="9" r="2.5" stroke="currentColor" stroke-width="1.4"/>
+          <path d="M9 1v2M9 15v2M1 9h2M15 9h2M3.1 3.1l1.4 1.4M13.5 13.5l1.4 1.4M14.9 3.1l-1.4 1.4M4.5 13.5l-1.4 1.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </header>
+
+    <!-- ── TIMER RING ──────────────────────────── -->
+    <!-- The SVG ring is the visual countdown.
+         JS animates stroke-dashoffset to shrink
+         the colored arc as time passes. -->
+    <div class="timer-wrap">
+      <svg class="ring" viewBox="0 0 220 220" aria-hidden="true">
+        <!-- Track: the faint background circle -->
+        <circle class="ring-track" cx="110" cy="110" r="96"/>
+        <!-- Progress: the colored arc that shrinks -->
+        <circle class="ring-progress" id="ring-progress" cx="110" cy="110" r="96"/>
+      </svg>
+
+      <!-- Time display sits in the center of the SVG -->
+      <div class="timer-center">
+        <span class="timer-digits" id="timer-digits">25:00</span>
+        <span class="timer-label" id="timer-label">Focus</span>
+      </div>
+    </div>
+
+    <!-- ── CONTROLS ────────────────────────────── -->
+    <div class="controls">
+      <button class="ctrl-btn secondary" id="reset-btn" aria-label="Reset">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M2 8a6 6 0 106-6H6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M4 4L6 6V2L4 4z" fill="currentColor"/>
+        </svg>
+      </button>
+      <button class="ctrl-btn primary" id="start-btn">Start</button>
+      <button class="ctrl-btn secondary" id="skip-btn" aria-label="Skip">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M3 3l8 5-8 5V3z" fill="currentColor"/>
+          <rect x="12" y="3" width="1.5" height="10" rx="0.75" fill="currentColor"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- ── SESSION DOTS ────────────────────────── -->
+    <!-- Four dots represent the 4 pomodoros in a cycle.
+         Filled dots = completed sessions. -->
+    <div class="session-row">
+      <span class="session-label">Session</span>
+      <div class="dots" id="dots">
+        <span class="dot" data-index="0"></span>
+        <span class="dot" data-index="1"></span>
+        <span class="dot" data-index="2"></span>
+        <span class="dot" data-index="3"></span>
+      </div>
+      <button class="clear-btn" id="clear-btn">Clear</button>
+    </div>
+
+    <!-- ── SETTINGS PANEL ─────────────────────── -->
+    <!-- Hidden by default. Toggled open/closed by JS.
+         Values are saved to localStorage on change. -->
+    <div class="settings-panel" id="settings-panel" aria-hidden="true">
+      <div class="settings-inner">
+        <p class="settings-title">Timer Settings</p>
+        <div class="settings-grid">
+          <div class="setting-item">
+            <label class="setting-label" for="set-focus">Focus (min)</label>
+            <input class="setting-input" type="number" id="set-focus" min="1" max="60" value="25"/>
+          </div>
+          <div class="setting-item">
+            <label class="setting-label" for="set-short">Short Break</label>
+            <input class="setting-input" type="number" id="set-short" min="1" max="30" value="5"/>
+          </div>
+          <div class="setting-item">
+            <label class="setting-label" for="set-long">Long Break</label>
+            <input class="setting-input" type="number" id="set-long" min="1" max="60" value="15"/>
+          </div>
+        </div>
+        <button class="apply-btn" id="apply-btn">Apply & Reset</button>
+      </div>
+    </div>
+
+  </div><!-- /.card -->
+
+  <script src="script.js"></script>
+</body>
+</html>

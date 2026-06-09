@@ -1,0 +1,455 @@
+/* =============================================
+  CSS VARIABLES
+  Colors are defined per-mode using data-mode
+  attribute selectors. Switching modes in JS
+  (app.dataset.mode = 'short') instantly
+  changes the entire accent color via CSS.
+  We also define light and dark theme tokens.
+============================================= */
+:root {
+  --bg:          #F5F3EE;
+  --card-bg:     #FFFFFF;
+  --text:        #1A1916;
+  --text-muted:  #9A9690;
+  --border:      #E8E5DE;
+  --btn-bg:      #F0EDE6;
+  --btn-hover:   #E6E3DC;
+  --shadow:      0 8px 40px rgba(0,0,0,0.08);
+  --ring-track:  #EDE9E0;
+  --transition:  0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Focus mode — warm red */
+[data-mode="focus"] {
+  --accent:       #D64045;
+  --accent-soft:  #FAEAEA;
+  --accent-dim:   rgba(214,64,69,0.15);
+}
+
+/* Short break — calm green */
+[data-mode="short"] {
+  --accent:       #2D6A4F;
+  --accent-soft:  #E8F5EE;
+  --accent-dim:   rgba(45,106,79,0.15);
+}
+
+/* Long break — ocean blue */
+[data-mode="long"] {
+  --accent:       #1D5FAD;
+  --accent-soft:  #E8F0FA;
+  --accent-dim:   rgba(29,95,173,0.15);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg:         #111110;
+    --card-bg:    #1C1B19;
+    --text:       #F0EDE6;
+    --text-muted: #6A6760;
+    --border:     #2A2926;
+    --btn-bg:     #252420;
+    --btn-hover:  #2E2D28;
+    --shadow:     0 8px 40px rgba(0,0,0,0.4);
+    --ring-track: #252420;
+  }
+
+  [data-mode="focus"] {
+    --accent:      #E8686D;
+    --accent-soft: #2A1A1A;
+    --accent-dim:  rgba(232,104,109,0.12);
+  }
+
+  [data-mode="short"] {
+    --accent:      #52B788;
+    --accent-soft: #162A20;
+    --accent-dim:  rgba(82,183,136,0.12);
+  }
+
+  [data-mode="long"] {
+    --accent:      #5B9BD5;
+    --accent-soft: #141E2E;
+    --accent-dim:  rgba(91,155,213,0.12);
+  }
+}
+
+/* =============================================
+  RESET & BASE
+============================================= */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  transition: background var(--transition);
+}
+
+/* =============================================
+  CARD
+============================================= */
+.card {
+  background: var(--card-bg);
+  border-radius: 28px;
+  padding: 28px 24px 24px;
+  width: 100%;
+  max-width: 380px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  transition: background var(--transition), box-shadow var(--transition);
+  position: relative;
+  overflow: hidden;
+}
+
+/* =============================================
+  HEADER — mode tabs + settings icon
+============================================= */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  gap: 8px;
+}
+
+.mode-tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--btn-bg);
+  border-radius: 10px;
+  padding: 3px;
+}
+
+.mode-tab {
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  white-space: nowrap;
+}
+
+.mode-tab.active {
+  background: var(--card-bg);
+  color: var(--accent);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+
+.settings-toggle {
+  background: var(--btn-bg);
+  border: none;
+  border-radius: 10px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s, transform 0.3s;
+}
+
+.settings-toggle:hover { background: var(--btn-hover); color: var(--text); }
+.settings-toggle.open  { transform: rotate(45deg); color: var(--accent); }
+
+/* =============================================
+  TIMER RING
+  The SVG ring uses stroke-dasharray and
+  stroke-dashoffset to create the countdown arc.
+  circumference = 2 * π * r = 2 * 3.14159 * 96 ≈ 603
+  JS sets stroke-dasharray to 603, then animates
+  dashoffset from 0 (full) to 603 (empty).
+============================================= */
+.timer-wrap {
+  position: relative;
+  width: 220px;
+  height: 220px;
+  margin: 0 auto 24px;
+}
+
+.ring {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg); /* start arc from top */
+}
+
+.ring-track {
+  fill: none;
+  stroke: var(--ring-track);
+  stroke-width: 10;
+  transition: stroke var(--transition);
+}
+
+.ring-progress {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 10;
+  stroke-linecap: round;
+  stroke-dasharray: 603;
+  stroke-dashoffset: 0;
+  transition: stroke var(--transition), stroke-dashoffset 1s linear;
+}
+
+/* Text centered inside the ring */
+.timer-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.timer-digits {
+  font-family: 'Syne', sans-serif;
+  font-size: 52px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -1px;
+  line-height: 1;
+  transition: color var(--transition);
+}
+
+.timer-label {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+  transition: color var(--transition);
+}
+
+/* =============================================
+  CONTROLS — reset, start/pause, skip
+============================================= */
+.controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.ctrl-btn {
+  border: none;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 600;
+  transition: background 0.15s, transform 0.1s, opacity 0.15s;
+}
+
+.ctrl-btn:active { transform: scale(0.94); }
+
+/* Secondary (icon) buttons */
+.ctrl-btn.secondary {
+  background: var(--btn-bg);
+  color: var(--text-muted);
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ctrl-btn.secondary:hover {
+  background: var(--btn-hover);
+  color: var(--text);
+}
+
+/* Primary start/pause button */
+.ctrl-btn.primary {
+  background: var(--accent);
+  color: #fff;
+  height: 52px;
+  padding: 0 36px;
+  border-radius: 16px;
+  font-size: 15px;
+  letter-spacing: 0.02em;
+  transition: background var(--transition), transform 0.1s, opacity 0.15s;
+}
+
+.ctrl-btn.primary:hover { opacity: 0.88; }
+
+/* =============================================
+  SESSION DOTS
+  Four dots represent one full Pomodoro cycle.
+  The .filled class is toggled by JS.
+  The pulse animation fires when a session completes.
+============================================= */
+.session-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 0;
+}
+
+.session-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.dots {
+  display: flex;
+  gap: 7px;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--ring-track);
+  border: 1.5px solid var(--border);
+  transition: background 0.3s, border-color 0.3s, transform 0.3s;
+}
+
+.dot.filled {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.dot.pulse {
+  animation: dotPulse 0.5s ease-out;
+}
+
+@keyframes dotPulse {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.6); }
+  100% { transform: scale(1); }
+}
+
+.clear-btn {
+  background: none;
+  border: none;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color 0.15s;
+}
+
+.clear-btn:hover { color: var(--text); }
+
+/* =============================================
+  SETTINGS PANEL
+  Slides in from the bottom using max-height
+  transition — a common CSS slide-down technique.
+  max-height: 0 with overflow: hidden hides it;
+  max-height: 300px reveals it smoothly.
+============================================= */
+.settings-panel {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.3s ease;
+  opacity: 0;
+}
+
+.settings-panel.open {
+  max-height: 280px;
+  opacity: 1;
+}
+
+.settings-inner {
+  border-top: 1px solid var(--border);
+  margin-top: 20px;
+  padding-top: 20px;
+}
+
+.settings-title {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 14px;
+}
+
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.setting-item {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.setting-label {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.setting-input {
+  background: var(--btn-bg);
+  border: 1.5px solid transparent;
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-family: 'Syne', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+  text-align: center;
+  outline: none;
+  width: 100%;
+  -moz-appearance: textfield;
+  transition: border-color 0.15s;
+}
+
+.setting-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+.setting-input:focus { border-color: var(--accent); }
+
+.apply-btn {
+  width: 100%;
+  background: var(--accent-soft);
+  border: none;
+  border-radius: 10px;
+  padding: 10px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  cursor: pointer;
+  transition: background 0.15s, color var(--transition);
+}
+
+.apply-btn:hover { opacity: 0.85; }
+
+/* =============================================
+  FINISH FLASH
+  A brief full-card color flash when a session
+  ends — gives satisfying visual feedback.
+============================================= */
+@keyframes finishFlash {
+  0%   { background: var(--accent-dim); }
+  100% { background: var(--card-bg); }
+}
+
+.card.flash {
+  animation: finishFlash 0.8s ease-out forwards;
+}
